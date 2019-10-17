@@ -1,0 +1,24 @@
+{
+  "name": "railway-enquiry",
+  "version": "1.0.0",
+  "description": "Railway Enquiry Skill",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "railway, alexa"
+  },
+  "keywords": [
+    "Abhishek",
+    "Anand"
+  ],
+  "author": "Abhishek Anand",
+  "license": "MIT",
+  "dependencies": {
+    "ask-sdk-core": "^2.6.0",
+    "ask-sdk-model": "^1.18.0",
+    "request": "^2.88.0"
+  }
+}
