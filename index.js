@@ -1,138 +1,148 @@
-'use strict';
+"use strict";
 
-const Alexa = require('ask-sdk-core');
+const Alexa = require("ask-sdk-core");
 
-const request = require('request');
+const request = require("request");
 
-const fs = require('fs');
-const daysJson = JSON.parse(fs.readFileSync('daysOfWeek.json'));
+const fs = require("fs");
 
-const appName = 'rail enquiry'
+const appName = "jenkins builder";
 
-const baseUrl = 'https://api.railbeeps.com/api/searchTrains/api-key/web-cfc8cf88fa0ac3b6fd8f9570608c6911';
+var jenkinsapi = require('jenkins-api');
+
+var jenkins = jenkinsapi.init('http://admin:admin@134.209.158.22:8080');
 
 const LaunchRequestHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'Launchrequest';
-    },
-    handle(handlerInput) {
-        let speechText = 'Welcome to the railway enquiry. You can say, check PNR status';
-        let displayText = "Welcome to the railway enquiry.";
-        return handlerInput.responseBuilder.speak(speechText)
-                .reprompt(speechText)
-                .withSimpleCard(appName, displayText)
-                .getResponse();
-    }
-}
-
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === "Launchrequest";
+  },
+  handle(handlerInput) {
+    let speechText = "Welcome to my jenkins builder. You can say, run job";
+    let displayText = "Welcome to my jenkins builder.";
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .reprompt(speechText)
+      .withSimpleCard(appName, displayText)
+      .getResponse();
+  },
+};
 
 const HelpIntentHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-            && handlerInput.requestEnvelope.request.intent.name === 'AMAZON.HelpIntent';
-    },
-    handle(handlerInput) {
-        //help text for your skill
-        let speechText = 'You can say, add 3 and 5';
+  canHandle(handlerInput) {
+    return (
+      handlerInput.requestEnvelope.request.type === "IntentRequest" &&
+      handlerInput.requestEnvelope.request.intent.name === "AMAZON.HelpIntent"
+    );
+  },
+  handle(handlerInput) {
+    //help text for your skill
+    let speechText = "You can say, run job";
 
-        return handlerInput.responseBuilder
-            .speak(speechText)
-            .reprompt(speechText)
-            .withSimpleCard(appName, speechText)
-            .getResponse();
-    }
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .reprompt(speechText)
+      .withSimpleCard(appName, speechText)
+      .getResponse();
+  },
 };
 
 const CancelAndStopIntentHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'IntentRequest'
-            && (handlerInput.requestEnvelope.request.intent.name === 'AMAZON.CancelIntent'
-                || handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent');
-    },
-    handle(handlerInput) {
-        let speechText = 'Goodbye';
-        return handlerInput.responseBuilder
-            .speak(speechText)
-            .withSimpleCard(appName, speechText)
-            .getResponse();
-    }
+  canHandle(handlerInput) {
+    return (
+      handlerInput.requestEnvelope.request.type === "IntentRequest" &&
+      (handlerInput.requestEnvelope.request.intent.name ===
+        "AMAZON.CancelIntent" ||
+        handlerInput.requestEnvelope.request.intent.name ===
+          "AMAZON.StopIntent")
+    );
+  },
+  handle(handlerInput) {
+    let speechText = "Goodbye";
+    return handlerInput.responseBuilder
+      .speak(speechText)
+      .withSimpleCard(appName, speechText)
+      .getResponse();
+  },
 };
 
 const SessionEndedRequestHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
-    },
-    handle(handlerInput) {
-        //any cleanup logic goes here
-        return handlerInput.responseBuilder.getResponse();
-    }
+  canHandle(handlerInput) {
+    return handlerInput.requestEnvelope.request.type === "SessionEndedRequest";
+  },
+  handle(handlerInput) {
+    //any cleanup logic goes here
+    return handlerInput.responseBuilder.getResponse();
+  },
 };
 
 //custom skill
-const TrainInfoHandler = {
-    canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === "IntentRequest"
-                && handlerInput.requestEnvelope.request.intent.name === 'traininforequest';
-    },
-    handle(handlerInput) {
-        let speechText = '';
-        let displayText = '';
-        let intent = handlerInput.requestEnvelope.request.intent;
-        let trainNo = intent.slots.trainNo.value;
-        if(trainNo) {
-            const validTrainNo = trainNo.toString().length;
-            const intTrainNo = Number.isInteger(trainNo)
-
-            if(validTrainNo == 5 && intTrainNo && trainNo>0) {
-                request(baseUrl + '?trainno=' + trainNo, { json:true }, (err, res, body) => {
-                    if(err) {
-                        speechText = `Internal error occurred while fetching data for train ${trainNo}. Please try again.`
-                        break;
-                    }
-                    if(body.length > 1 || body.length == 0) {
-                        speechText = `Train number ${trainNo} does not exist. Please try again with a valid train number.`
-                        break;
-                    }
-                    const trainName = body[0].display.substring(8, input_string.indexOf(" ("));
-                    const start = body[0].source_name;
-                    const end = body[0].destination_name;
-                    const daysPattern = body[0].runson;
-                    speechText = `Train number ${trainNo}, ${trainName}, runs from ${start} to ${end} ${daysOfWeek(daysPattern)}.`
-                })
-                displayText = speechText;
-                return handlerInput.responseBuilder
-                        .speak(speechText)
-                        .withSimpleCard(appName, displayText)
-                        .withShouldEndSession(true)
-                        .getResponse();
-            } else {
-                //ask for required input
-                return handlerInput.responseBuilder.addDelegateDirective(intent)
-                    .getResponse();
-            }      
-        }
+const RunPipelineHandler = {
+  canHandle(handlerInput) {
+    return (
+      handlerInput.requestEnvelope.request.type === "IntentRequest" &&
+      handlerInput.requestEnvelope.request.intent.name === "buildintent"
+    );
+  },
+  async handle(handlerInput) {
+    let speechText = "";
+    let displayText = "";
+    let intent = handlerInput.requestEnvelope.request.intent;
+    let jobName = intent.slots.pipeline.value;
+    if (jobName) {
+      const job = jobName.toString();
+      speechText = await build(job);
+      displayText = speechText;
+      return handlerInput.responseBuilder
+        .speak(speechText)
+        .withSimpleCard(appName, displayText)
+        .withShouldEndSession(true)
+        .getResponse();
+    } else {
+      //ask for required input
+      return handlerInput.responseBuilder
+        .addDelegateDirective(intent)
+        .getResponse();
     }
+  },
+};
+
+async function build(job) {
+  let speechText = '';
+  jenkins.job_info(job, function(err, data) {
+    if (err){ 
+      speechText = `Error finding job ${job}.` 
+    }
+    if(data) {
+      if(data.name && data.name === job) {
+        jenkins.build(job, function(err, data) {
+          if (err){ 
+            speechText=`Error running job ${job}.`; 
+          }
+          if(data) {
+            speechText = `Job ${job} started successfully.`;
+          }
+        });
+      } else {
+        speechText = `Job ${job} does not exist.`
+      }
+    }
+  });
+  await sleep(2000);
+  return speechText;
 }
 
-function daysOfWeek(pattern) {
-    let days = '';
-    if(pattern = '1111111') {
-        days = 'All days of the week.'
-    }
-    days = 'On'
-    const number = pattern.toString();
-    for(var i = 0; i < number.length; i++) {
-        if(number.charAt(i) == '1')
-        days = days + ' ' + daysJson.i
-    }
-    return days;
+function sleep(millis) {
+  return new Promise(resolve => setTimeout(resolve, millis));
 }
 
 //Lambda handler function
 //Remember to add custom request handlers here
 exports.handler = Alexa.SkillBuilders.custom()
-    .addRequestHandlers(LaunchRequestHandler,
-        HelpIntentHandler,
-        CancelAndStopIntentHandler,
-        SessionEndedRequestHandler,
-        RunPipelineHandler).lambda();
+  .addRequestHandlers(
+    LaunchRequestHandler,
+    HelpIntentHandler,
+    CancelAndStopIntentHandler,
+    SessionEndedRequestHandler,
+    RunPipelineHandler
+  )
+  .lambda();
